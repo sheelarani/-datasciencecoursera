@@ -28,7 +28,7 @@ Final data set has follwoing columns:
 
 * subject : Subject label for each participant
 * activity: Activity performed by each participant
-* varable: Measurement name for the signals collected in this experiment
+* variable: Measurement name for the signals collected in this experiment
 * avg_value: Average value for each measurement, activity and subject
 
 The dataset includes the following files:
