@@ -206,4 +206,5 @@ y_tidy <- ddply(y_gather, .(subject, activity, variable), summarize, avg_value =
 ## Verify means for each variable
 View(y_tidy)
 
-
+## Final cleanup
+rm(yfinal, y_gather, ytt, ytr, features, ac_label)
