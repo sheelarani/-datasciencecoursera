@@ -12,6 +12,7 @@ tidy_data.txt: Tidy data created from this project
 
 ### Prerequisites:
   You need to install the following packages to run this program successfully:
+
   plyr, dplyr, stringr, tidyr
 
 ### Steps to create tidy data set:
