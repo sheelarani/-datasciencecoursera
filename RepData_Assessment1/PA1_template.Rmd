@@ -38,41 +38,42 @@ dat1 <- cbind(dat1, date, interval)
 
 1. Calulate the total number of steps taken per day.
 
-```{r echo =TRUE}
-sdat <- summarize(group_by(dat1, date), steps_sum = sum(steps))
-```
+   ```{r echo =TRUE}
+  sdat <- summarize(group_by(dat1, date), steps_sum = sum(steps))
+  print(head(sdat))
+  ```
 
 
 2. Plot histogram of the total number of steps taken per day
 
-```{r histogram, fig.height =4, echo =TRUE}
-hist(sdat$steps_sum, breaks = 20, main = "Histogram of steps per day", xlab = "Total number of steps taken per day")
-```
+   ```{r histogram, fig.height =4, echo =TRUE}
+   hist(sdat$steps_sum, breaks = 20, main = "Histogram of steps per day", xlab = "Total number of steps taken per day")
+   ```
 
 3. Calculate mean and median of the total steps taken per day
 
-Mean of total number of steps taken per day is `r mean(sdat$steps_sum)`.
+   Mean of total number of steps taken per day is  **`r mean(sdat$steps_sum)`**.
 
-Median of total number of steps taken per day is `r median(sdat$steps_sum)`.
+   Median of total number of steps taken per day is **`r median(sdat$steps_sum)`**.
 
 ## What is the average daily activity pattern?
 
 1. Make a time series plot of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
 
-The below plot shows the average number of steps taken for each time interval across all days. In this plot the missing values are ignored.
-The average number of steps acroos all days is zero during midnight - early morning hours. Which shows that most likely the sujects are sleeping during this time period. It peaks between the usual commute hours, 8:00 AM -10:00AM. Then this value is mostly less than half the peak value. We can guess, that the subjects are stabilized in their movements and the activity is not as much instance as during commute hours. The we see that the values starts decreasing late in the evening, showing subjects are slowing down, may be preapring for good night rest.
-
-```{r echo = TRUE}
-sdat_int <- summarize(group_by(dat1, interval), steps_mean = mean(steps))
-
-```
-```{r plot, fig.height =4, echo =TRUE}
+  The below plot shows the average number of steps taken for each time interval    across all days. In this plot the missing values are ignored.
+  The average number of steps acroos all days is zero during midnight - early  morning hours. Which shows that most likely the sujects are sleeping during  this time period. It peaks between the usual commute hours, 8:00 AM -10:00AM.  Then this value is mostly less than half the peak value. We can guess, that the  subjects are stabilized in their movements and the activity is not as much  instance as during commute hours. The we see that the values starts decreasing  late in the evening, showing subjects are slowing down, may be preapring for  good night rest.
+ 
+  ```{r echo = TRUE}
+  sdat_int <- summarize(group_by(dat1, interval), steps_mean = mean(steps))
+ 
+  ```
+  ```{r plot, fig.height =4, echo =TRUE}
 with(sdat_int, plot(as.POSIXct(strptime(sdat_int$interval, "%H:%M:%S")), steps_mean, main = "Average steps for each interval", type = "l", xlab = "Time interval", ylab = "Average steps"))
-```
+  ```
 
-2. Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
+2. Which 5-minute interval, on average across all the days in the dataset,  contains the maximum number of steps?
 
-The time interval `r sdat_int[which(sdat_int$steps_mean == max(sdat_int$steps_mean)), 1]`, contains the maximum average steps across all days.
+   The time interval `r sdat_int[which(sdat_int$steps_mean == max(sdat_int$steps_mean)), 1]`, contains the maximum average steps across all days.
 
 
 
@@ -80,124 +81,121 @@ The time interval `r sdat_int[which(sdat_int$steps_mean == max(sdat_int$steps_me
 
 1. Report the total missing values.
 
-There are `r nrow(dat[which(is.na(dat$steps)), ])` missing values in this dataset.
+   There are **`r nrow(dat[which(is.na(dat$steps)), ])`** missing values in this dataset.
 
 2. Fill all of the missing values in the datasetn and create new dataset.
 
-My approach to fill missing values is to take mean of steps taken during the interval across all days. Use this mean value to replace the missing values for each time interval.
+   My approach to fill missing values is to take mean of steps taken during the  interval across all days. Use this mean value to replace the missing values for  each time interval.
 
-```{r echo = TRUE}
-dat2 <- mutate(dat, date = ymd(dat$date), date_ts =  ymd_hm(paste(dat$date, str_pad(dat$interval, 4, pad = 0),sep = ":")))
+   ```{r echo = TRUE}
+   dat2 <- mutate(dat, date = ymd(dat$date), date_ts =  ymd_hm(paste(dat$date, str_pad(dat$interval, 4, pad = 0),sep = ":")))
 
-dat2 <- mutate(dat2, interval = format(dat2$date_ts, "%H:%M:%S"))
+   dat2 <- mutate(dat2, interval = format(dat2$date_ts, "%H:%M:%S"))
 
-print(head(dat2))
-dat3 <- c()
+   print(head(dat2))
+   dat3 <- c()
 
-## Create function to replace missing values
+   ## Create function to replace missing values
 
-replace_na <- function(){
+   replace_na <- function(){
   
-  # read each row of df and replace NA value with mean for that time interval
-  for (i in 1:nrow(dat2)) {
-    x <- dat2[i, c(1)]
-    int <- dat2[i, c(3)]
-    # if steps is null replace it with mean for that interval
-    if (is.na(x) == TRUE) { 
-      x <- mean(dat2[which(dat2$interval == int), c(1)], na.rm = T)
-      dat2[i, c(1)] <- x
-      ##print(dat2[i,])
+    # read each row of df and replace NA value with mean for that time interval
+    for (i in 1:nrow(dat2)) {
+      x <- dat2[i, c(1)]
+      int <- dat2[i, c(3)]
+      # if steps is null replace it with mean for that interval
+      if (is.na(x) == TRUE) { 
+        x <- mean(dat2[which(dat2$interval == int), c(1)], na.rm = T)
+        dat2[i, c(1)] <- x
+        ##print(dat2[i,])
+      
+      }
       
     }
-      
+    dat3 <- dat2
+    dat3
   }
-  dat3 <- dat2
-  dat3
-}
 
-dat3 <- replace_na()
+  dat3 <- replace_na()
 
-print(head(dat3))
+  print(head(dat3))
 
-```
+  ```
 
 3. Make a histogram of the total number of steps taken each day.
 
-First, I summarized the total number of steps taken each day in a new data frame.
+  First, I summarized the total number of steps taken each day in a new data frame.
 
-```{r echo = TRUE}
+  ```{r echo = TRUE}
+  sdat3 <- summarize(group_by(dat3, date), steps_sum = sum(steps))
+  ```
 
-sdat3 <- summarize(group_by(dat3, date), steps_sum = sum(steps))
+  Below is the histogram, showing the distribution of total no. of steps taken for each day.
 
-```
-
-Below is the histogram, showing the distribution of total no. of steps taken for each day.
-
-```{r histogram2, echo=TRUE}
-  hist(sdat3$steps_sum, breaks = 20, main = "Histogram of steps per day after replacing missing values", xlab = "Total number of steps taken per day")
-
-```
+  ```{r histogram2, echo=TRUE}
+    hist(sdat3$steps_sum, breaks = 20, main = "Histogram of steps per day after replacing missing values", xlab = "Total number of steps taken per day")
+  ```
 
 
 4. Calculate the mean and median of the total number of steps taken per day.
 
-After replacing the missing values, the mean and median of the total number os steps taken during per day are, `r mean(sdat3$steps_sum)` and `r  median(sdat3$steps_sum)`.
+   After replacing the missing values, the mean and median of the total number     os steps taken during per day are, **`r mean(sdat3$steps_sum)`** and **`r  median(sdat3$steps_sum)`**.
 
-The mean and median values are unchanged after replacing the missing values with the mean across each day. This means, that my assumption didn't eschew the data distribution and hence not changing any conclusion derived from this dataaset. The histogram is also showing very similar data distribution.
+   The mean and median values are unchanged after replacing the missing values    with the mean across each day. This means, that my assumption didn't eschew the data distribution and hence not changing any conclusion derived from this dataaset. The histogram is also showing very similar data distribution.
 
 ## Are there differences in activity patterns between weekdays and weekends?
 
 1. Create a new factor variable in the dataset with two levels - "weekday" and "weekend".
 
-```{r echo = TRUE}
-dat3 <- mutate( dat3, weekday <- weekdays(date))
-colnames(dat3)[5] <- "weekday"
+   ```{r echo = TRUE}
+   dat3 <- mutate( dat3, weekday <- weekdays(date))
+   colnames(dat3)[5] <- "weekday"
 
-## Create function to replace weekdays labels
+   ## Create function to replace weekdays labels
 
-is_weekday <- function(){
-# read each row of df and replace weedays label to "weekday" or "weekend"
-  for (i in 1:nrow(dat3)) {
-    x <- dat3[i, c(5)]
-    # replace weekdays names to weekend/weekday
-    if (x == "Saturday" | x == "Sunday") {
-      x <- "weekend"
-    }
-    else { x <- "weekday"}
-    dat3[i, c(5)] <- x
- }
- dat4 <- dat3
- dat4
-}
+  is_weekday <- function(){
+   # read each row of df and replace weedays label to "weekday" or "weekend"
+    for (i in 1:nrow(dat3)) {
+      x <- dat3[i, c(5)]
+      # replace weekdays names to weekend/weekday
+      if (x == "Saturday" | x == "Sunday") {
+        x <- "weekend"
+      }
+      else { x <- "weekday"}
+      dat3[i, c(5)] <- x
+   }
+   dat4 <- dat3
+   dat4
+   }
 
-## Two level data frame is created, showing the day is weekday or weekend
-dat4 <- is_weekday()
-print(head(dat4))
-```
-2. Make a panel plot containing a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis)
+   ## Two level data frame is created, showing the day is weekday or weekend
+   dat4 <- is_weekday()
+   print(head(dat4))
+   ```
+2. Make a panel plot containing a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged  across all weekday days or weekend days (y-axis)
 
-I created two separate datasets to store the rows for weekends and weekdays.
+   I created two separate datasets to store the rows for weekends and weekdays.
+  
+   ```{r echo = TRUE}
+   dat4_0 <- dat4[which(dat4$weekday == "weekday"),]
+   dat4_0 <- mutate(dat4_0, interval = format(dat4_0$date_ts, "%H:%M:%S"))
+   sdat_0 <- summarize(group_by(dat4_0, interval), steps_mean = mean(steps))
 
-```{r echo = TRUE}
-dat4_0 <- dat4[which(dat4$weekday == "weekday"),]
-dat4_0 <- mutate(dat4_0, interval = format(dat4_0$date_ts, "%H:%M:%S"))
-sdat_0 <- summarize(group_by(dat4_0, interval), steps_mean = mean(steps))
+   dat4_1 <- dat4[which(dat4$weekday == "weekend"),]
+   dat4_1 <- mutate(dat4_1, interval = format(dat4_1$date_ts, "%H:%M:%S"))
+   sdat_1 <- summarize(group_by(dat4_1, interval), steps_mean = mean(steps))
+   ```
 
-dat4_1 <- dat4[which(dat4$weekday == "weekend"),]
-dat4_1 <- mutate(dat4_1, interval = format(dat4_1$date_ts, "%H:%M:%S"))
-sdat_1 <- summarize(group_by(dat4_1, interval), steps_mean = mean(steps))
-```
+   The pattern of average steps taken per day for each 5 minute interval on  weekdays is differnt from weekends. The average on weekend remains high during afternoon, as compared to on weekdays. This might indicate that subject is   likely to be engaged in more physical work or outdoor activites on weekend. The subject might have desk job or a stationary job, which is influecing the pattern of daily steps.
 
-The pattern of average steps taken per day for each 5 minute interval on weekdays is differnt from weekends. The average on weekend remains high during afternoon, as compared to on weekdays. This might indicate that subject is likely to be engaged in more physical work or outdoor activites on weekend. The subject might have desk job or a stationary job, which is influecing the pattern of daily steps.
-
-```{r plot2, fig.height =4, echo = TRUE}
-par(mfrow = c(1,2))
-with(sdat_0, plot(as.POSIXct(strptime(sdat_0$interval, "%H:%M:%S")), steps_mean, main = "Average steps on weekdays", type = "l", xlab = "Time interval", ylab = "Average steps"))
+   ```{r plot2, fig.height =4, echo = TRUE}
+   par(mfrow = c(1,2))
+   with(sdat_0, plot(as.POSIXct(strptime(sdat_0$interval, "%H:%M:%S")), steps_mean, main = "Average steps on weekdays", type = "l", xlab = "Time interval", ylab = "Average steps"))
       
-with(sdat_1, plot(as.POSIXct(strptime(sdat_1$interval, "%H:%M:%S")), steps_mean, main = "Average steps on weekends", type = "l", xlab = "Time interval", ylab = "Average steps)"))
+   with(sdat_1, plot(as.POSIXct(strptime(sdat_1$interval, "%H:%M:%S")), steps_mean, main = "Average steps on weekends", type = "l", xlab = "Time interval", ylab = "Average steps)"))
 
-```
-```{r echo = F, results = "hide"}
-##cleanup all the variables created by this code
-rm (dat, dat1, date, interval, sdat, sdat_int, dat2, dat3, sdat3, dat4, dat4_0, dat4_1, sdat_0, sdat_1)
-```
+   ```
+   ```{r echo = F, results = "hide"}
+   ##cleanup all the variables created by this code
+   rm (dat, dat1, date, interval, sdat, sdat_int, dat2, dat3, sdat3, dat4, dat4_0, dat4_1, sdat_0, sdat_1)
+   ```
