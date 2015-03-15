@@ -3,7 +3,13 @@
 
 ## Loading and preprocessing the data
 
+For this assignment, we have to explore the data collected from personal monitoring device. The data is collected at 5 minute intervals through out the day. This data set has data collected over two months from an anonymous individual and includes the number of steps taken in 5 minute interval each day.
+The details of this dataset can be found [here](https://class.coursera.org/repdata-012/human_grading/view/courses/973513/assessments/3/submissions).
+
 Data for this assignment is downloaded from course website, [Activity monitoring data](https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip).
+
+This report assumes that to run the code, you will download the dataset in your working directory.
+
 
 
 ```r
@@ -264,3 +270,4 @@ with(sdat_1, plot(as.POSIXct(strptime(sdat_1$interval, "%H:%M:%S")), steps_mean,
 ```
 
 ![](PA1_template_files/figure-html/plot2-1.png) 
+
