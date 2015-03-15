@@ -120,7 +120,7 @@ dat1 <- cbind(dat1, date, interval)
 
 2. Which 5-minute interval, on average across all the days in the dataset,  contains the maximum number of steps?
 
-   The time interval 08:35:00, contains the maximum average steps across all days.
+   The time interval **08:35:00**, contains the maximum average steps across all days.
 
 
 
@@ -215,7 +215,7 @@ dat1 <- cbind(dat1, date, interval)
 
    After replacing the missing values, the mean and median of the total number     os steps taken during per day are, **1.0766189\times 10^{4}** and **1.0766189\times 10^{4}**.
 
-   The mean and median values are unchanged after replacing the missing values    with the mean across each day. This means, that my assumption didn't eschew the data distribution and hence not changing any conclusion derived from this dataaset. The histogram is also showing very similar data distribution.
+   The mean value is unchanged after replacing the missing values with the mean across each day. This means, that my assumption didn't eschew the data distribution. Now, the medain is closer to mean, which means the data distribution is more even. This is not changing any conclusion derived from this dataaset. The histogram is also showing very similar data distribution.
 
 ## Are there differences in activity patterns between weekdays and weekends?
 
