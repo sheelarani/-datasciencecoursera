@@ -1,0 +1,29 @@
+library(plyr)
+library(dplyr)
+
+print("cleanup variables before starting")
+rm(list = ls())
+
+NEI <- readRDS("summarySCC_PM25.rds")
+SCC <- readRDS("Source_Classification_Code.rds")
+
+dat1 <- merge(NEI, SCC, by.NEI="SCC", by.SCC = "SCC")
+dat_bm <- dat1[which(dat1$fips == "24510"), ]
+dat_bm_sum <- summarize(group_by(dat_bm, year), yearly_emmisions = sum(Emissions))
+
+
+##Close all open connections
+closeAllConnections()
+
+##print plot 2
+## open device to write to png file
+print("Plotting frequency graph")
+print("Opening device for printing")
+png(filename = "plot2.png", width = 480, height = 480, units = "px")
+with(dat_bm_sum, plot(year, yearly_emmisions, main = "Total emission per year for Baltimore City", type = "b", xlab = "Year",  ylab = "Total emission"))
+
+print("closing device")
+dev.off()
+
+print("Cleanup all the variables")
+rm(list = ls())
