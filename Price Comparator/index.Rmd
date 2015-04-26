@@ -1,0 +1,40 @@
+---
+title       : 
+subtitle    : 
+author      : 
+job         : 
+framework   : html5slides    # {io2012, html5slides, shower, dzslides, ...}
+highlighter : highlight.js  # {highlight.js, prettify, highlight}
+hitheme     : tomorrow      # 
+widgets     : [mathjax]            # {mathjax, quiz, bootstrap}
+mode        : selfcontained # {standalone, draft}
+knit        : slidify::knit2slides
+launch.browser : TRUE
+---
+##Price Comparator App using Shiny
+
+- Compare the price you paid in your city with other cities
+- Find the frequency distribution of the prices
+
+--- .class #id 
+## Slide 2
+## Features
+
+###Plug-in your price and city name
+###FIlters out cities, which have prices greater than you paid 
+
+---
+## Slide#3
+## Benefits
+
+### Easy to use
+### Practical information at your finger tip
+### Verstile application
+---
+##Slide#4
+##Demo
+
+---
+## Slide #5
+## Future Enhancements
+---
