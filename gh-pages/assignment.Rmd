@@ -1,0 +1,182 @@
+---
+title: "Modeling and Predictive Analysis of Human Activity Recognition data"
+output: html_document
+---
+
+## Overview
+
+The purpose of this project is to create a model and predict how well an excersize is done.  
+
+## Data Source
+Weightlifting excersize dataset is obtained from [here](http://groupware.les.inf.puc-rio.br/har).  This dataset is collected by the researchers by using on-body sensing aproach,to investigate and predict how well an excersize is done. Six participants have done 10 sets of weightlifting excersizes in five different fashions, exactly according to the specification under the supervision of experienced weightlifters. The outcome of each excersize is classified as class, A, B, C, B or E. Only class A excersize matches the specific execution of the excersize and rest of the four are characterisitc of common mistakes. 
+The dataset contains the time-series indicators from the on-body and dumbell sensors, in 0.5 second intervals. The avg, min, mas, std deviation are calculated for each window consisting of several overlapping intervals and stored in separate columns. 
+
+## Data Cleanup
+
+This dataset contains two sets of in separate columns, one collected from sensors and others calcuated from the collected data. This has resulted in blank/missing values in many columns, without getting rid of that will make impossible to fit a model. Because of this, data clean-up is done to get rid of the null and unnecessary columns. This has resulted in reducing the number of variables from 160 to 53.
+
+```{r mydataSet, echo=TRUE}
+dat <- read.csv("pml-training.csv", header = T, sep = ",", na.strings = c("","NA", "#DIV/0!"))
+d1 <- dat[,colSums(is.na(dat)) < 10]
+d1_f <- d1[, c(8:60)]
+dim(d1_f)
+```
+
+## Pre-processing
+
+Sixty percent of training dataset is partitioned to train a model and forty percent is used to validate the model.
+
+```{r mypreProc, echo=TRUE}
+ library(caret)
+ set.seed(3535)
+
+ inTrain <- createDataPartition(y=d1_f$classe, p=0.6, list=FALSE)
+ training <- d1_f[inTrain,]
+ testing <- d1_f[-inTrain, ]
+ dim(training)
+ dim(testing)
+```
+
+#### PCA Analysis
+
+Firts, I tried to find out highly correlated variables and verify if merging them together will produce a better model by reducing the noise in data.
+
+```{r PCAAnalysis, echo=TRUE}
+ M <- abs(cor(training[, -53]))
+ diag(M) <- 0
+ ## which(M > 0.8, arr.ind = T)
+ m <- which(M > 0.8, arr.ind = T)
+
+dim(m)
+
+print("Top 5 correlated variables")
+m[1:5, ]
+```
+
+The above shows that there **`r nrow(m)`** variables which have correlation greater than 0.8, so we would expect to get better by combining the variables.
+I used pca method pre-process the variables, using only 2 PCA components to generate the model.
+
+```{r PCAComparison, echo=TRUE, cache=TRUE}
+ library(randomForest)
+ preProc <- preProcess(training[, -53], method = "pca", pcaComp = 2)
+ trainPC <- predict(preProc, training[, -53])
+ ##plot(trainPC[,1], trainPC[,2])
+ qplot(trainPC[,1], trainPC[,2], col=training$classe, xlab = "PCA Component 1", ylab = "PCA Component 2", main = "PCA Component Analysis")
+ fit_PC <- randomForest(training$classe ~ ., data = trainPC)
+ testPC <- predict(preProc, testing[, -53])
+ cm <- confusionMatrix(testing$classe, predict(fit_PC, testPC))
+ cm$overall
+```
+
+Plotting the PCA components shows that we cannot predict the class based on these values.
+
+The confusionMatrix shows that this model produce less than 50% accuracy, so it is not very helpful. This is expected as PCA analysis is more suitable for linear type models.
+
+## Modeling and Prediction
+
+This dataset has non-linear variable as result, we need to pick the methods suitable for creating non-linear  models.
+
+#### CART Method
+
+Classification and Regression Tree method is tried first, as this is simplest to interpret. A gorup of variables are used to split the outcome in different group and then the groups are validated for homogeneity. If the groups are not homogenius furthe splits are tried unitl the group becomes homogeneous enough or the group becomes too small.
+
+```{r myrandomTree, echo = TRUE, cache=TRUE, fig.height= 8, fig.width= 6}
+library(rpart)
+fit_rpart <- train(classe ~ . , data = training, method = "rpart")
+plot(fit_rpart$finalModel, uniform=TRUE, main = "Classification Tree")
+text(fit_rpart$finalModel, use.n=TRUE, all = TRUE, cex=.8)
+```
+
+#### Random Forest Method
+
+Random forest method is widely used method to create models because of their high accuracy. In this method, both samples and variables are bootstraped at each split and then either vote or averages of outcomes are calulated in the end to generate the final model.
+
+```{r myrandomForest, echo=TRUE, cache=TRUE}
+library(randomForest)
+fit1_rf <- randomForest(classe~., data=training)
+fit1_rf$ntree; fit1_rf$mtry
+```
+
+#### Boosting Random Tree Method
+
+Bagging method is used to boost predictors from random tree method, which is doone be combining the weak predictors and then combining them in a way to get a stronger predictor. This is most accurate method of prediction after the random forest methos, which also does the same in a larger scale.
+
+```{r myBoosting, echo =TRUE, cache=TRUE}
+library(gbm)
+fit_boost <- train(classe ~ ., method = "gbm", data = training, verbose = FALSE)
+fit_boost$finalModel
+```
+
+#### Model Based prediction
+
+In base model, it is assumed that data follows a specific probalistic model  and a mdoel is tried based on optimal classifiers based on that model. The pros of this approach is that there might be some structure in the data collected in real life but the cons is that if the assumptions are very off  then the prediction will fail.
+
+```{r myModelBased, echo=TRUE, cache=TRUE}
+fit_lda <- train(classe ~ ., data = training, method = "lda")
+## confusionMatrix(testing$classe, predict(fit_lda, testing))
+
+```
+
+```{r myPlot1, echo =TRUE, fig.height= 6, fig.width= 12}
+
+plot(fit1_rf, main = "Random Forest Model")
+plot(fit_rpart, main = "CART Model")
+plot(fit_boost, main = " Bagging Tree Model")
+
+```
+
+## Error Analysis
+
+Below is the comparison of accuracy for all the methods used to create models in previous section.
+
+```{r myCompare, echo=TRUE}
+ cm <- confusionMatrix(testing$classe, predict(fit_PC, testPC))
+ CM <- as.data.frame(cm$overall)
+ names(CM)[1] <- "PCA w rf"
+
+ cm1 <- confusionMatrix(testing$classe, predict(fit1_rf, testing))
+ CM <- cbind(CM, cm1$overall)
+ names(CM)[2] <- "rf"
+
+ cm_lda <- confusionMatrix(testing$classe, predict(fit_lda, testing))
+ CM <- cbind(CM, cm_lda$overall)
+ names(CM)[3] <- "lda"
+
+ cm_rpart <- confusionMatrix(testing$classe, predict(fit_rpart, testing))
+ CM <- cbind(CM, cm_rpart$overall)
+ names(CM)[4] <- "rpart"
+
+ cm_boost <- confusionMatrix(testing$classe, predict(fit_boost, testing))
+ CM <- cbind(CM, cm_boost$overall)
+ names(CM)[5] <- "boost"
+
+print("Printing accuracy comparision from each model")
+CM
+
+print("Missclassification table for randomForest method")
+cm1$table
+
+pred1 <- predict(fit1_rf, testing)
+x <- testing[which(testing$classe != pred1), c(53)]
+
+print("Total number of mismatch values")
+length(x)
+
+qplot( testing$classe, pred1, color=testing$classe, xlab = " Sample Class", ylab = "Predicted Class", main = " Prediction error plot")
+```
+
+Comparion of each model for overall accuracy shows that randomForest method generates the most accurate model, with accuracy **`r CM[1,2]`** which is very remarkable. This can increase the chances for overfitting the training dataset. This model got **`r length(x)`** mismatched values out of **`r nrow(testing)`** values from testing dataset.
+
+When regression tree model was generated using boosting method, the accuracy comes close to randomForest method.
+
+
+
+## Conclusion
+Random Forest model generated the maximum accuracy for the dataset used for this analysis.
+
+##Credits:
+
+Velloso, E.; Bulling, A.; Gellersen, H.; Ugulino, W.; Fuks, H. Qualitative Activity Recognition of Weight Lifting Exercises. Proceedings of 4th International Conference in Cooperation with SIGCHI (Augmented Human '13) . Stuttgart, Germany: ACM SIGCHI, 2013.
+[Read more...](http://groupware.les.inf.puc-rio.br/har#ixzz3auylNvkl)
+
+Class of Practical Machine Learning, Courtsey John Hopkins Univ., coursera.org
